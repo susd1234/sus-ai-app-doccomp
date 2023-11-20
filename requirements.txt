@@ -1,4 +1,7 @@
 langchain
 streamlit
+streamlit_chat  
 python-dotenv
 cohere
+pinecone-client
+beautifulsoup4
