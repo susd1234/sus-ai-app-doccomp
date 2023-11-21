@@ -1,68 +1,56 @@
-
 import os
-# import Cohere
-import cohere
-
 from dotenv import load_dotenv, find_dotenv
-_ = load_dotenv(find_dotenv()) 
 
-from langchain.llms import Cohere
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import SequentialChain
-
+from typing import Set
 import streamlit as st
+from streamlit_chat import message
+from engn.engine import llm_call
 
-def main():
-    """
-    This script uses Cohere to generate text based on user input. It prompts the user to enter a Famous Personality's name,
-    then find out the birth date. After that this app findout five major events that happened around that time. The
-    results are displayed on the Web App's Screen. 
-    """
-    
-    st.title('Correlating Event Search')
-    input_text=st.text_input("Enter a Famous Personality's Name")
 
-    input_prompt_1=PromptTemplate(
-        input_variables=['name'],
-        template="Find out Info Regarding the Personality {name}"
-    )
+def inpt_str(source_urls: Set[str]) -> str:
+    _ = load_dotenv(find_dotenv())
+    if not source_urls:
+        return ""
+    sources_list = sorted(source_urls)
+    sources_str = "sources:\n"
+    for i, source in enumerate(sources_list, start=1):
+        sources_str += f"{i}. {source}\n"
+    return sources_str
 
-    person_memory = ConversationBufferMemory(input_key='name', memory_key='chat_history')
-    dob_memory = ConversationBufferMemory(input_key='person', memory_key='chat_history')
-    descr_memory = ConversationBufferMemory(input_key='dob', memory_key='description_history')
 
-    llm=Cohere(temperature=0.8)
-    chain_1=LLMChain(
-        llm=llm,prompt=input_prompt_1,verbose=True,output_key='person',memory=person_memory)
+st.title(':blue["PDF Companion"] *- LLM Powered AI App* :smile:')
 
-    input_prompt_2=PromptTemplate(
-        input_variables=['person'],
-        template="when was {person} born"
-    )
+session_state = st.session_state
 
-    chain_2=LLMChain(
-        llm=llm,prompt=input_prompt_2,verbose=True,output_key='dob',memory=dob_memory)
+if "chat_answers_history" not in session_state:
+    session_state["chat_answers_history"] = []
+if "user_prompt_history" not in session_state:
+    session_state["user_prompt_history"] = []
+if "chat_history" not in session_state:
+    session_state["chat_history"] = []
 
-    # Prompt Templates
-    input_prompt_3=PromptTemplate(
-        input_variables=['dob'],
-        template="Mention 5 major events happened around {dob} in the world"
-    )
+prompt = st.text_input("Prompt", placeholder="Enter the Query Related to the PDF Document Here...") or st.button(
+    "Submit"
+)
 
-    chain_3=LLMChain(llm=llm,prompt=input_prompt_3,verbose=True,output_key='description',memory=descr_memory)
-    parent_chain=SequentialChain(
-        chains=[chain_1,chain_2,chain_3],input_variables=['name'],output_variables=['person','dob','description'],verbose=True)
+if prompt:
+    with st.spinner("Finding Answers..."):
+        generated_response = llm_call(
+            query=prompt, chat_history=session_state["chat_history"]
+        )
 
-    if input_text:
-        st.write(parent_chain({'name':input_text}))
+        source_documents = generated_response.get("source_documents", [])
+        sources = set(doc.metadata["source"] for doc in source_documents)
 
-        with st.expander('Person Name'): 
-            st.info(person_memory.buffer)
+        formatted_response = f"{generated_response['answer']} \n\n {inpt_str(sources)}"
 
-        with st.expander('Major Events'): 
-            st.info(descr_memory.buffer)
+        session_state.chat_history.append((prompt, generated_response["answer"]))
+        session_state.user_prompt_history.append(prompt)
+        session_state.chat_answers_history.append(formatted_response)
 
-if __name__ == "__main__":
-    main()
+if session_state["chat_answers_history"]:
+    for generated_response, user_query in zip(
+        session_state["chat_answers_history"], session_state["user_prompt_history"]
+    ):
+        message(user_query, is_user=True)
+        message(generated_response)

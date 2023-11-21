@@ -1,6 +1,6 @@
-# sus-lc-ai-app-1
+# sus-ai-app-doccomp
 
-# <span class="smallcaps"><u>AI App 1 - "Correlated Event Search" LLM App using LangChain</u></span>
+# <span class="smallcaps"><u>"Document Companion" LLM Powered AI App</u></span>
 
 **Tools & Technologies Used:**
 
@@ -10,11 +10,11 @@
 
 - LLM – Cohere
 
-- StreamLit
+- Vector DB - PineCone
 
-- Integration (Django, HTML, CSS)
+- StreamLit
 
 **Solution Architecture Diagram:**
 
-<img src="./media/image1.png" style="width:6.26806in;height:2.40764in"
+<img src="./media/image1.jpg" style="width:6.26806in;height:2.40764in"
 alt="A diagram of a server Description automatically generated" />
