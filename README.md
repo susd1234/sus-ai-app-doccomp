@@ -1,6 +1,6 @@
 # sus-ai-app-doccomp
 
-# <span class="smallcaps"><u>"Document Companion" LLM Powered AI App</u></span>
+# <span class="smallcaps"><u>"Document Companion" LLM & RAG Powered AI App</u></span>
 
 **Tools & Technologies Used:**
 
